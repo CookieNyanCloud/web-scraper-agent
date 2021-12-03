@@ -24,7 +24,7 @@ func main() {
 				if scraper.Check() {
 					s := scraper.Find()
 					for k, _ := range users {
-						msg := tgbotapi.NewMessage(k, s)
+						msg := tgbotapi.NewMessage(k, "объявлены иноагентами:\n"+s)
 						_, _ = bot.Send(msg)
 
 					}
