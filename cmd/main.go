@@ -17,7 +17,7 @@ func main() {
 	bot, updates := sotatgbot.StartSotaBot(conf.Token)
 
 	go func() {
-		ticker := time.NewTicker(time.Minute / 30)
+		ticker := time.NewTicker(time.Minute)
 		for {
 			select {
 			case <-ticker.C:
@@ -26,7 +26,6 @@ func main() {
 					for k, _ := range users {
 						msg := tgbotapi.NewMessage(k, "объявлены иноагентами:\n"+s)
 						_, _ = bot.Send(msg)
-
 					}
 				}
 			}

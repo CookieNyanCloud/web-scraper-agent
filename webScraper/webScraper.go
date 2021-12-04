@@ -22,7 +22,7 @@ type IScraper interface {
 func NewScraper(url string) IScraper {
 	return &Scraper{
 		url:     url,
-		lastNum: 99,
+		lastNum: 103,
 		dif:     0,
 	}
 }
@@ -70,6 +70,6 @@ func (s *Scraper) Find() string {
 			log.Printf("err visiting %s: %v", s.url, err)
 		}
 	}
-			fmt.Println(text)
+	fmt.Println(text)
 	return text
 }
