@@ -1,7 +1,7 @@
-version: '3.3'
+version: '3.0'
 
-  web-scraper-agent:
-    image: web-scraper-agent
-    build: ./
-    env_file:
-      - .env
+web-scraper-agent:
+  image: web-scraper-agent
+  build: ./
+  env_file:
+    - .env
