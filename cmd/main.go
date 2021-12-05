@@ -21,11 +21,13 @@ func main() {
 		for {
 			select {
 			case <-ticker.C:
-				if scraper.Check() {
-					s := scraper.Find()
-					for k, _ := range users {
-						msg := tgbotapi.NewMessage(k, "объявлены иноагентами:\n"+s)
-						_, _ = bot.Send(msg)
+				if time.Now().Hour() >= 15 || time.Now().Hour() <= 2 {
+					if scraper.Check() {
+						s := scraper.Find()
+						for k, _ := range users {
+							msg := tgbotapi.NewMessage(k, "объявлены иноагентами:\n"+s)
+							_, _ = bot.Send(msg)
+						}
 					}
 				}
 			}
