@@ -17,6 +17,7 @@ type Scraper struct {
 type IScraper interface {
 	Check() bool
 	Find() string
+	GetLast() string
 }
 
 func NewScraper(url string) IScraper {
@@ -68,7 +69,24 @@ func (s *Scraper) Find() string {
 		err := coll.Visit(s.url)
 		if err != nil {
 			log.Printf("err visiting %s: %v", s.url, err)
+			return ""
 		}
+	}
+	fmt.Println(text)
+	return text
+}
+
+func (s *Scraper) GetLast() string {
+	var text, query string
+	coll := colly.NewCollector()
+	query = fmt.Sprint("tr:last-child td:nth-child(2)")
+	coll.OnHTML("table tbody", func(e *colly.HTMLElement) {
+		text = e.DOM.Find(query).Text() + "\n"
+	})
+	err := coll.Visit(s.url)
+	if err != nil {
+		log.Printf("err visiting %s: %v", s.url, err)
+		return ""
 	}
 	fmt.Println(text)
 	return text

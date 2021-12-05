@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/CookieNyanCloud/web-scraper-agent/configs"
 	"github.com/CookieNyanCloud/web-scraper-agent/sotatgbot"
 	"github.com/CookieNyanCloud/web-scraper-agent/webScraper"
@@ -39,6 +40,13 @@ func main() {
 
 		if update.Message == nil {
 			continue
+		} else if update.Message.Text == "check" {
+			last := scraper.GetLast()
+			t1 := time.Now().Hour() >= 15
+			t2 := time.Now().Hour() <= 2
+			text := fmt.Sprintf("last:%s\n>=15:%t\n<=2:%t", last, t1, t2)
+			msg := tgbotapi.NewMessage(update.Message.Chat.ID, text)
+			_, _ = bot.Send(msg)
 		} else {
 			users[update.Message.Chat.ID] = struct{}{}
 			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "слежу")
