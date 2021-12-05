@@ -22,7 +22,7 @@ type IScraper interface {
 func NewScraper(url string) IScraper {
 	return &Scraper{
 		url:     url,
-		lastNum: 103,
+		lastNum: 102,
 		dif:     0,
 	}
 }
