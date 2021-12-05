@@ -40,11 +40,12 @@ func main() {
 
 		if update.Message == nil {
 			continue
-		} else if update.Message.Text == "check" {
+		} else if update.Message.Command() == "check" {
 			last := scraper.GetLast()
-			t1 := time.Now().Hour() >= 15
+			t1 := time.Now().Hour() >= 16
 			t2 := time.Now().Hour() <= 2
-			text := fmt.Sprintf("last:%s\n>=15:%t\n<=2:%t", last, t1, t2)
+			t3 :=time.Now()
+			text := fmt.Sprintf("last:%s\n>=16:%t\n<=2:%t\n(%v)", last, t1, t2,t3)
 			msg := tgbotapi.NewMessage(update.Message.Chat.ID, text)
 			_, _ = bot.Send(msg)
 		} else {
