@@ -22,7 +22,7 @@ func main() {
 		for {
 			select {
 			case <-ticker.C:
-				if time.Now().Hour() >= 15 || time.Now().Hour() <= 2 {
+				if time.Now().Hour()+3 >= 15 || time.Now().Hour()+3 <= 2 {
 					if scraper.Check() {
 						s := scraper.Find()
 						for k, _ := range users {
@@ -42,10 +42,10 @@ func main() {
 			continue
 		} else if update.Message.Command() == "check" {
 			last := scraper.GetLast()
-			t1 := time.Now().Hour() >= 16
-			t2 := time.Now().Hour() <= 2
-			t3 :=time.Now()
-			text := fmt.Sprintf("last:%s\n>=16:%t\n<=2:%t\n(%v)", last, t1, t2,t3)
+			t1 := time.Now().Hour()+3 >= 16
+			t2 := time.Now().Hour()+3 <= 2
+			//t3 := time.Now()
+			text := fmt.Sprintf("last:%s\n>=16:%t\n<=2:%t", last, t1, t2)
 			msg := tgbotapi.NewMessage(update.Message.Chat.ID, text)
 			_, _ = bot.Send(msg)
 		} else {
