@@ -2,29 +2,42 @@ package webScraper
 
 import (
 	"fmt"
-	"github.com/gocolly/colly"
+	"io"
 	"log"
+	"net/http"
+	"os"
 	"strconv"
 	"strings"
+
+	"github.com/CookieNyanCloud/web-scraper-agent/configs"
+	"github.com/gocolly/colly"
 )
 
 type Scraper struct {
-	url     string
-	lastNum int
-	dif     int
+	noRegURL string
+	minNRURL string
+	startMin string
+	url      string
+	lastNum  int
+	dif      int
 }
 
 type IScraper interface {
+	CheckNoReg() []string
 	Check() bool
 	Find() string
 	GetLast() string
+	GetLastNR() (string, error)
 }
 
-func NewScraper(url string) IScraper {
+func NewScraper(conf *configs.Conf) IScraper {
 	return &Scraper{
-		url:     url,
-		lastNum: 102,
-		dif:     0,
+		noRegURL: conf.NoRegURL,
+		minNRURL: conf.MinNRURL,
+		startMin: conf.StartMin,
+		url:      conf.URL,
+		lastNum:  102,
+		dif:      0,
 	}
 }
 
@@ -90,4 +103,53 @@ func (s *Scraper) GetLast() string {
 	}
 	fmt.Println(text)
 	return text
+}
+
+func (s *Scraper) GetLastNR() (string, error) {
+	var URL string
+	coll := colly.NewCollector()
+	coll.OnHTML("p a", func(e *colly.HTMLElement) {
+		URL = e.Attr("href")
+	})
+	err := coll.Visit(s.minNRURL)
+	if err != nil {
+		log.Printf("err visiting %s: %v", s.url, err)
+		return "", err
+	}
+	fmt.Println("URL ", s.startMin+URL)
+	err = DownloadFile("noreg.xlsx", s.startMin+URL)
+	return "", err
+}
+
+func (s *Scraper) CheckNoReg() []string {
+
+	return nil
+}
+
+func DownloadFile(filepath, url string) error {
+	client := &http.Client{}
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8")
+	req.Header.Set("Accept-Encoding", "gzip, deflate, br")
+	req.Header.Set("Accept-Language", "ru-RU,ru;q=0.8,en-US;q=0.5,en;q=0.3")
+	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0")
+	req.Header.Set("name", "value")
+	req.Header.Set("name", "value")
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+
+	defer resp.Body.Close()
+	out, err := os.Create(filepath)
+	if err != nil {
+		return err
+	}
+	defer out.Close()
+	_, err = io.Copy(out, resp.Body)
+	return err
 }

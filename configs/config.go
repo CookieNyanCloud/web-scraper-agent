@@ -2,13 +2,17 @@ package configs
 
 import (
 	"flag"
-	"github.com/joho/godotenv"
 	"os"
+
+	"github.com/joho/godotenv"
 )
 
 type Conf struct {
-	Token string
-	URL   string
+	NoRegURL string
+	MinNRURL string
+	StartMin string
+	Token    string
+	URL      string
 }
 
 func InitConf() *Conf {
@@ -27,6 +31,9 @@ func envVar(local bool) *Conf {
 		}
 	}
 	return &Conf{
+		os.Getenv("NOREGURL"),
+		os.Getenv("MINNRURL"),
+		os.Getenv("STARTMIN"),
 		os.Getenv("TOKEN_A"),
 		os.Getenv("URL"),
 	}
