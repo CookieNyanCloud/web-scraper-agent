@@ -30,6 +30,8 @@ func main() {
 							msg := tgbotapi.NewMessage(k, "объявлены иноагентами:\n"+s)
 							_, _ = bot.Send(msg)
 						}
+						msg := tgbotapi.NewMessage(conf.Chat, "объявлены иноагентами:\n"+s)
+						_, _ = bot.Send(msg)
 					}
 					noRegnko, err := scraper.CheckNoReg()
 					if err != nil {
@@ -44,6 +46,8 @@ func main() {
 							msg := tgbotapi.NewMessage(k, "объявлены иноагентами:\n"+nko)
 							_, _ = bot.Send(msg)
 						}
+						msg := tgbotapi.NewMessage(conf.Chat, "объявлены иноагентами:\n"+nko)
+						_, _ = bot.Send(msg)
 					}
 				}
 			}
