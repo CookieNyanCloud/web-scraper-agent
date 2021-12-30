@@ -11,33 +11,38 @@ import (
 
 	"github.com/CookieNyanCloud/web-scraper-agent/configs"
 	"github.com/gocolly/colly"
+	"github.com/xuri/excelize/v2"
 )
 
 type Scraper struct {
-	noRegURL string
-	minNRURL string
-	startMin string
-	url      string
-	lastNum  int
-	dif      int
+	noRegURL  string
+	minNRURL  string
+	startMin  string
+	url       string
+	lastNum   int
+	dif       int
+	lastNRNKO int
+	nkonkoDif int
 }
 
 type IScraper interface {
-	CheckNoReg() []string
+	CheckNoReg() (bool, error)
 	Check() bool
 	Find() string
 	GetLast() string
 	GetLastNR() (string, error)
+	FindNoRegNKO() (string, error)
 }
 
 func NewScraper(conf *configs.Conf) IScraper {
 	return &Scraper{
-		noRegURL: conf.NoRegURL,
-		minNRURL: conf.MinNRURL,
-		startMin: conf.StartMin,
-		url:      conf.URL,
-		lastNum:  102,
-		dif:      0,
+		noRegURL:  conf.NoRegURL,
+		minNRURL:  conf.MinNRURL,
+		startMin:  conf.StartMin,
+		url:       conf.URL,
+		lastNum:   102,
+		dif:       0,
+		lastNRNKO: 8,
 	}
 }
 
@@ -111,6 +116,7 @@ func (s *Scraper) GetLastNR() (string, error) {
 	coll.OnHTML("p a", func(e *colly.HTMLElement) {
 		URL = e.Attr("href")
 	})
+
 	err := coll.Visit(s.minNRURL)
 	if err != nil {
 		log.Printf("err visiting %s: %v", s.url, err)
@@ -118,12 +124,70 @@ func (s *Scraper) GetLastNR() (string, error) {
 	}
 	fmt.Println("URL ", s.startMin+URL)
 	err = DownloadFile("noreg.xlsx", s.startMin+URL)
-	return "", err
+
+	f, err := excelize.OpenFile("noreg.xlsx")
+	if err != nil {
+		return "", err
+	}
+	rows, err := f.GetRows("Лист1")
+	if err != nil {
+		return "", err
+	}
+	err = os.Remove("noreg.xlsx")
+	if err != nil {
+		return "", err
+	}
+	return rows[len(rows)-1][1], nil
 }
 
-func (s *Scraper) CheckNoReg() []string {
+func (s *Scraper) CheckNoReg() (bool, error) {
+	var URL string
+	coll := colly.NewCollector()
+	coll.OnHTML("p a", func(e *colly.HTMLElement) {
+		URL = e.Attr("href")
+	})
 
-	return nil
+	err := coll.Visit(s.minNRURL)
+	if err != nil {
+		log.Printf("err visiting %s: %v", s.url, err)
+		return false, err
+	}
+	//return true, nil
+	fmt.Println("URLs ", s.startMin+URL, s.noRegURL)
+	fmt.Println(s.startMin+URL == s.noRegURL)
+	if s.startMin+URL != s.noRegURL {
+		s.noRegURL = s.startMin + URL
+		return true, nil
+	}
+	return false, nil
+}
+
+func (s *Scraper) FindNoRegNKO() (string, error) {
+
+	err := DownloadFile("noreg.xlsx", s.noRegURL)
+	if err != nil {
+		return "", err
+	}
+	f, err := excelize.OpenFile("noreg.xlsx")
+	if err != nil {
+		return "", err
+	}
+	rows, err := f.GetRows("Лист1")
+	if err != nil {
+		return "", err
+	}
+	err = os.Remove("noreg.xlsx")
+	if err != nil {
+		return "", err
+	}
+	var out string
+
+	for i := s.lastNRNKO; i < len(rows); i++ {
+		fmt.Println(i, rows[i][1])
+		out += fmt.Sprintf("%v%v\n", rows[i][0], rows[i][1])
+	}
+	s.lastNRNKO = len(rows)
+	return out, nil
 }
 
 func DownloadFile(filepath, url string) error {

@@ -13,6 +13,7 @@ require (
 	github.com/kennygrant/sanitize v1.2.4 // indirect
 	github.com/saintfish/chardet v0.0.0-20120816061221-3af4cd4741ca // indirect
 	github.com/temoto/robotstxt v1.1.2 // indirect
+	github.com/xuri/excelize/v2 v2.4.1 // indirect
 	golang.org/x/net v0.0.0-20211201190559-0a0e4e1bb54c // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 )
