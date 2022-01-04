@@ -15,6 +15,8 @@ type Conf struct {
 	Token    string
 	URL      string
 	Chat     int64
+	NKOURL   string
+	NKOBody  string
 }
 
 func InitConf() *Conf {
@@ -40,5 +42,7 @@ func envVar(local bool) *Conf {
 		os.Getenv("TOKEN_A"),
 		os.Getenv("URL"),
 		chat,
+		os.Getenv("NKOURL"),
+		os.Getenv("NKOBODY"),
 	}
 }

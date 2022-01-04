@@ -60,15 +60,23 @@ func main() {
 		if update.Message == nil {
 			continue
 		} else if update.Message.Command() == "check" {
+
 			lastNoReg, err := scraper.GetLastNR()
 			if err != nil {
 				fmt.Printf("no reg: %v", err)
 			}
 			fmt.Println(lastNoReg)
+
 			lastSMI := scraper.GetLast()
+
+			lastNKO, err := scraper.GetLastNKO()
+			if err != nil {
+				fmt.Printf("nko: %v", err)
+			}
 			textSMI := fmt.Sprintf("последний в списке иноагентов:%s\n\n", lastSMI)
 			textNRNKO := fmt.Sprintf("последний в списке незарегестрированных НКО:%s\n", lastNoReg)
-			msg := tgbotapi.NewMessage(update.Message.Chat.ID, textSMI+textNRNKO)
+			textNKO := fmt.Sprintf("последний в спискеНКО:%s\n", lastNKO)
+			msg := tgbotapi.NewMessage(update.Message.Chat.ID, textSMI+textNRNKO+textNKO)
 			_, _ = bot.Send(msg)
 		} else if update.Message.Command() == "time" {
 			t1 := (time.Now().Hour()+3)%24 >= 16

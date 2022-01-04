@@ -23,15 +23,22 @@ type Scraper struct {
 	dif       int
 	lastNRNKO int
 	nkonkoDif int
+	nkoURL    string
+	nkoAll    int
+	nkoBody   string
 }
 
 type IScraper interface {
-	CheckNoReg() (bool, error)
+	//media
 	Check() bool
 	Find() string
 	GetLast() string
-	GetLastNR() (string, error)
+	//no reg nko
+	CheckNoReg() (bool, error)
 	FindNoRegNKO() (string, error)
+	GetLastNR() (string, error)
+	//nko
+	GetLastNKO() (string, error)
 }
 
 func NewScraper(conf *configs.Conf) IScraper {
@@ -43,6 +50,9 @@ func NewScraper(conf *configs.Conf) IScraper {
 		lastNum:   102,
 		dif:       0,
 		lastNRNKO: 8,
+		nkoAll:    73,
+		nkoURL:    conf.NKOURL,
+		nkoBody:   conf.NKOBody,
 	}
 }
 
@@ -190,6 +200,40 @@ func (s *Scraper) FindNoRegNKO() (string, error) {
 	return out, nil
 }
 
+func (s *Scraper) GetLastNKO() (string, error) {
+	client := &http.Client{}
+
+	req, err := http.NewRequest("POST", s.nkoURL, strings.NewReader(s.nkoBody))
+	if err != nil {
+		return "", err
+	}
+	req.Header.Set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8")
+	req.Header.Set("Accept-Encoding", "ru-RU,ru;q=0.8,en-US;q=0.5,en;q=0.3")
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0")
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+	handle := func(w http.ResponseWriter, r *http.Request) {
+		bodyBytes, err := io.ReadAll(resp.Body)
+		if err != nil {
+			fmt.Println(err)
+		}
+		w.Write(bodyBytes)
+	}
+	http.HandleFunc("/", handle)
+	err = http.ListenAndServe(":8080", nil)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	return "", err
+
+}
+
 func DownloadFile(filepath, url string) error {
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", url, nil)
@@ -200,8 +244,6 @@ func DownloadFile(filepath, url string) error {
 	req.Header.Set("Accept-Encoding", "gzip, deflate, br")
 	req.Header.Set("Accept-Language", "ru-RU,ru;q=0.8,en-US;q=0.5,en;q=0.3")
 	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0")
-	req.Header.Set("name", "value")
-	req.Header.Set("name", "value")
 
 	resp, err := client.Do(req)
 	if err != nil {
