@@ -1,6 +1,7 @@
 package webScraper
 
 import (
+	"bufio"
 	"fmt"
 	"io"
 	"log"
@@ -38,7 +39,7 @@ type IScraper interface {
 	FindNoRegNKO() (string, error)
 	GetLastNR() (string, error)
 	//nko
-	GetLastNKO() (string, error)
+	GetLastNKO() (bool, error)
 }
 
 func NewScraper(conf *configs.Conf) IScraper {
@@ -200,37 +201,38 @@ func (s *Scraper) FindNoRegNKO() (string, error) {
 	return out, nil
 }
 
-func (s *Scraper) GetLastNKO() (string, error) {
+func (s *Scraper) GetLastNKO() (bool, error) {
 	client := &http.Client{}
-
 	req, err := http.NewRequest("POST", s.nkoURL, strings.NewReader(s.nkoBody))
 	if err != nil {
-		return "", err
+		return false, err
 	}
 	req.Header.Set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8")
 	req.Header.Set("Accept-Encoding", "ru-RU,ru;q=0.8,en-US;q=0.5,en;q=0.3")
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0")
-
 	resp, err := client.Do(req)
 	if err != nil {
-		return "", err
+		return false, err
 	}
 	defer resp.Body.Close()
-	handle := func(w http.ResponseWriter, r *http.Request) {
-		bodyBytes, err := io.ReadAll(resp.Body)
-		if err != nil {
-			fmt.Println(err)
+	scanner := bufio.NewScanner(resp.Body)
+	line := 1
+	for scanner.Scan() {
+		if line != 405 {
+			line++
+			continue
 		}
-		w.Write(bodyBytes)
+		check := fmt.Sprintf("[1&nbsp;-&nbsp;%d]", 73)
+		if !strings.Contains(scanner.Text(), check) {
+			return true, nil
+		}
+		break
 	}
-	http.HandleFunc("/", handle)
-	err = http.ListenAndServe(":8080", nil)
-	if err != nil {
-		fmt.Println(err)
+	if err := scanner.Err(); err != nil {
+		return false, err
 	}
-
-	return "", err
+	return false, err
 
 }
 

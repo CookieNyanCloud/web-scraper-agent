@@ -29,9 +29,13 @@ func main() {
 						for k, _ := range users {
 							msg := tgbotapi.NewMessage(k, "объявлены иноагентами:\n"+s)
 							_, _ = bot.Send(msg)
+							msgURL := tgbotapi.NewMessage(k, conf.URL)
+							_, _ = bot.Send(msgURL)
 						}
 						msg := tgbotapi.NewMessage(conf.Chat, "объявлены иноагентами:\n"+s)
 						_, _ = bot.Send(msg)
+						msgURL := tgbotapi.NewMessage(conf.Chat, conf.URL)
+						_, _ = bot.Send(msgURL)
 					}
 					noRegnko, err := scraper.CheckNoReg()
 					if err != nil {
@@ -45,9 +49,27 @@ func main() {
 						for k, _ := range users {
 							msg := tgbotapi.NewMessage(k, "объявлены иноагентами:\n"+nko)
 							_, _ = bot.Send(msg)
+							msgURL := tgbotapi.NewMessage(k, conf.NoRegURL)
+							_, _ = bot.Send(msgURL)
 						}
 						msg := tgbotapi.NewMessage(conf.Chat, "объявлены иноагентами:\n"+nko)
 						_, _ = bot.Send(msg)
+						msgURL := tgbotapi.NewMessage(conf.Chat, conf.NoRegURL)
+						_, _ = bot.Send(msgURL)
+					}
+					lastNKO, err := scraper.GetLastNKO()
+					if lastNKO {
+						for k, _ := range users {
+							msg := tgbotapi.NewMessage(k, "объявлены новые НКО:\n")
+							_, _ = bot.Send(msg)
+							msgURL := tgbotapi.NewMessage(k, conf.NKOURL)
+							_, _ = bot.Send(msgURL)
+
+						}
+						msg := tgbotapi.NewMessage(conf.Chat, "объявлены новые НКО:\n")
+						_, _ = bot.Send(msg)
+						msgURL := tgbotapi.NewMessage(conf.Chat, conf.NKOURL)
+						_, _ = bot.Send(msgURL)
 					}
 				}
 			}
@@ -75,8 +97,9 @@ func main() {
 			}
 			textSMI := fmt.Sprintf("последний в списке иноагентов:%s\n\n", lastSMI)
 			textNRNKO := fmt.Sprintf("последний в списке незарегестрированных НКО:%s\n", lastNoReg)
-			textNKO := fmt.Sprintf("последний в спискеНКО:%s\n", lastNKO)
-			msg := tgbotapi.NewMessage(update.Message.Chat.ID, textSMI+textNRNKO+textNKO)
+			textNKO := fmt.Sprintf("новыев  списке НКО:%t\n", lastNKO)
+			allURL := fmt.Sprintf("%s\n%s\n%s\n", conf.URL, conf.NKOURL, conf.NoRegURL)
+			msg := tgbotapi.NewMessage(update.Message.Chat.ID, textSMI+textNRNKO+textNKO+allURL)
 			_, _ = bot.Send(msg)
 		} else if update.Message.Command() == "time" {
 			t1 := (time.Now().Hour()+3)%24 >= 16
