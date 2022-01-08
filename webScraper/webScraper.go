@@ -48,7 +48,7 @@ func NewScraper(conf *configs.Conf) IScraper {
 		minNRURL:  conf.MinNRURL,
 		startMin:  conf.StartMin,
 		url:       conf.URL,
-		lastNum:   102,
+		lastNum:   109,
 		dif:       0,
 		lastNRNKO: 8,
 		nkoAll:    73,
@@ -77,7 +77,6 @@ func (s *Scraper) Check() bool {
 		log.Printf("err getting last number: %v", err)
 	}
 	num := numF
-	fmt.Println(num)
 	if num > s.lastNum {
 		fmt.Println(num, s.lastNum)
 		s.dif = num - s.lastNum
@@ -223,8 +222,14 @@ func (s *Scraper) GetLastNKO() (bool, error) {
 			line++
 			continue
 		}
-		check := fmt.Sprintf("[1&nbsp;-&nbsp;%d]", 73)
+		check := fmt.Sprintf("[1&nbsp;-&nbsp;%d]", s.nkoAll)
 		if !strings.Contains(scanner.Text(), check) {
+			for i := s.nkoAll; i < 1000; i++ {
+				if strings.Contains(scanner.Text(), "[1&nbsp;-&nbsp;"+strconv.Itoa(i)+"]") {
+					s.nkoAll = i
+					break
+				}
+			}
 			return true, nil
 		}
 		break

@@ -87,8 +87,6 @@ func main() {
 			if err != nil {
 				fmt.Printf("no reg: %v", err)
 			}
-			fmt.Println(lastNoReg)
-
 			lastSMI := scraper.GetLast()
 
 			lastNKO, err := scraper.GetLastNKO()
