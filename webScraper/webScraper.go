@@ -39,7 +39,7 @@ type IScraper interface {
 	FindNoRegNKO() (string, error)
 	GetLastNR() (string, error)
 	//nko
-	GetLastNKO() (bool, error)
+	GetLastNKO() (bool, int, error)
 }
 
 func NewScraper(conf *configs.Conf) IScraper {
@@ -51,7 +51,7 @@ func NewScraper(conf *configs.Conf) IScraper {
 		lastNum:   109,
 		dif:       0,
 		lastNRNKO: 8,
-		nkoAll:    73,
+		nkoAll:    72,
 		nkoURL:    conf.NKOURL,
 		nkoBody:   conf.NKOBody,
 	}
@@ -200,11 +200,11 @@ func (s *Scraper) FindNoRegNKO() (string, error) {
 	return out, nil
 }
 
-func (s *Scraper) GetLastNKO() (bool, error) {
+func (s *Scraper) GetLastNKO() (bool, int, error) {
 	client := &http.Client{}
 	req, err := http.NewRequest("POST", s.nkoURL, strings.NewReader(s.nkoBody))
 	if err != nil {
-		return false, err
+		return false, 0, err
 	}
 	req.Header.Set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8")
 	req.Header.Set("Accept-Encoding", "ru-RU,ru;q=0.8,en-US;q=0.5,en;q=0.3")
@@ -212,7 +212,7 @@ func (s *Scraper) GetLastNKO() (bool, error) {
 	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0")
 	resp, err := client.Do(req)
 	if err != nil {
-		return false, err
+		return false, 0, err
 	}
 	defer resp.Body.Close()
 	scanner := bufio.NewScanner(resp.Body)
@@ -230,14 +230,14 @@ func (s *Scraper) GetLastNKO() (bool, error) {
 					break
 				}
 			}
-			return true, nil
+			return true, s.nkoAll, nil
 		}
 		break
 	}
 	if err := scanner.Err(); err != nil {
-		return false, err
+		return false, 0, err
 	}
-	return false, err
+	return false, s.nkoAll, err
 
 }
 

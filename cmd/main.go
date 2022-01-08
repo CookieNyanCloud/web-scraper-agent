@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/CookieNyanCloud/web-scraper-agent/configs"
@@ -57,16 +58,16 @@ func main() {
 						msgURL := tgbotapi.NewMessage(conf.Chat, conf.NoRegURL)
 						_, _ = bot.Send(msgURL)
 					}
-					lastNKO, err := scraper.GetLastNKO()
+					lastNKO, all, err := scraper.GetLastNKO()
 					if lastNKO {
 						for k, _ := range users {
-							msg := tgbotapi.NewMessage(k, "объявлены новые НКО:\n")
+							msg := tgbotapi.NewMessage(k, "объявлены новые НКО:\n"+strconv.Itoa(all))
 							_, _ = bot.Send(msg)
 							msgURL := tgbotapi.NewMessage(k, conf.NKOURL)
 							_, _ = bot.Send(msgURL)
 
 						}
-						msg := tgbotapi.NewMessage(conf.Chat, "объявлены новые НКО:\n")
+						msg := tgbotapi.NewMessage(conf.Chat, "объявлены новые НКО:\n"+strconv.Itoa(all))
 						_, _ = bot.Send(msg)
 						msgURL := tgbotapi.NewMessage(conf.Chat, conf.NKOURL)
 						_, _ = bot.Send(msgURL)
@@ -89,14 +90,15 @@ func main() {
 			}
 			lastSMI := scraper.GetLast()
 
-			lastNKO, err := scraper.GetLastNKO()
+			lastNKO, all, err := scraper.GetLastNKO()
 			if err != nil {
 				fmt.Printf("nko: %v", err)
 			}
 			textSMI := fmt.Sprintf("последний в списке иноагентов:%s\n\n", lastSMI)
 			textNRNKO := fmt.Sprintf("последний в списке незарегестрированных НКО:%s\n", lastNoReg)
-			textNKO := fmt.Sprintf("новыев  списке НКО:%t\n", lastNKO)
+			textNKO := fmt.Sprintf("новыев  списке НКО:%t,%d\n", lastNKO, all)
 			allURL := fmt.Sprintf("%s\n%s\n%s\n", conf.URL, conf.NKOURL, conf.NoRegURL)
+			fmt.Println(conf)
 			msg := tgbotapi.NewMessage(update.Message.Chat.ID, textSMI+textNRNKO+textNKO+allURL)
 			_, _ = bot.Send(msg)
 		} else if update.Message.Command() == "time" {
