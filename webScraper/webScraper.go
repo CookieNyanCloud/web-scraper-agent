@@ -1,7 +1,7 @@
 package webScraper
 
 import (
-	"bufio"
+	"bytes"
 	"fmt"
 	"io"
 	"log"
@@ -13,6 +13,8 @@ import (
 	"github.com/CookieNyanCloud/web-scraper-agent/configs"
 	"github.com/gocolly/colly"
 	"github.com/xuri/excelize/v2"
+	"golang.org/x/text/encoding"
+	"golang.org/x/text/transform"
 )
 
 type Scraper struct {
@@ -207,36 +209,65 @@ func (s *Scraper) GetLastNKO() (bool, int, error) {
 		return false, 0, err
 	}
 	req.Header.Set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8")
-	req.Header.Set("Accept-Encoding", "ru-RU,ru;q=0.8,en-US;q=0.5,en;q=0.3")
+	req.Header.Set("Accept-Encoding", "gzip, deflate")
+	req.Header.Set("Accept-Language", "ru-RU,ru;q=0.8,en-US;q=0.5,en;q=0.3")
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0")
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:96.0) Gecko/20100101 Firefox/96.0")
 	resp, err := client.Do(req)
 	if err != nil {
 		return false, 0, err
 	}
 	defer resp.Body.Close()
-	scanner := bufio.NewScanner(resp.Body)
-	line := 1
-	for scanner.Scan() {
-		if line != 405 {
-			line++
-			continue
-		}
-		check := fmt.Sprintf("[1&nbsp;-&nbsp;%d]", s.nkoAll)
-		if !strings.Contains(scanner.Text(), check) {
-			for i := s.nkoAll; i < 1000; i++ {
-				if strings.Contains(scanner.Text(), "[1&nbsp;-&nbsp;"+strconv.Itoa(i)+"]") {
-					s.nkoAll = i
-					break
-				}
-			}
-			return true, s.nkoAll, nil
-		}
-		break
-	}
-	if err := scanner.Err(); err != nil {
+	var b bytes.Buffer
+	var r bytes.Buffer
+	_, err = io.Copy(&r, resp.Body)
+	if err != nil {
+		fmt.Println("copy1:", err)
 		return false, 0, err
 	}
+	UTF8ToWin := transform.NewWriter(&b, encoding.UTF8Validator)
+	_, err = UTF8ToWin.Write(r.Bytes())
+	if err != nil {
+		fmt.Println("write:", err)
+		return false, 0, err
+	}
+	UTF8ToWin.Close()
+	file, err := os.Create("file.html")
+	_, err = io.Copy(file, resp.Body)
+	if err != nil {
+		fmt.Println("copy2:", err)
+		return false, 0, err
+	}
+
+	//scanner := bufio.NewScanner(resp.Body)
+	//if err != nil {
+	//	return false, 0, err
+	//}
+	//line := 1
+	//for scanner.Scan() {
+	//	if line != 405 {
+	//		line++
+	//		continue
+	//	}
+	//	check := fmt.Sprintf("[1&nbsp;-&nbsp;%d]", s.nkoAll)
+	//	if !strings.Contains(scanner.Text(), check) {
+	//		for i := s.nkoAll; i < 1000; i++ {
+	//			if strings.Contains(scanner.Text(), "[1&nbsp;-&nbsp;"+strconv.Itoa(i)+"]") {
+	//				s.nkoAll = i
+	//				break
+	//			}
+	//		}
+	//		fmt.Println(scanner.Text())
+	//		return true, s.nkoAll, nil
+	//	}
+	//	break
+	//}
+	//if err := scanner.Err(); err != nil {
+	//	return false, 0, err
+	//}
 	return false, s.nkoAll, err
 
 }

@@ -82,7 +82,9 @@ func main() {
 
 		if update.Message == nil {
 			continue
-		} else if update.Message.Command() == "check" {
+		}
+
+		if update.Message.Command() == "check" {
 
 			lastNoReg, err := scraper.GetLastNR()
 			if err != nil {
@@ -101,14 +103,20 @@ func main() {
 			fmt.Println(conf)
 			msg := tgbotapi.NewMessage(update.Message.Chat.ID, textSMI+textNRNKO+textNKO+allURL)
 			_, _ = bot.Send(msg)
-		} else if update.Message.Command() == "time" {
+			continue
+		}
+
+		if update.Message.Command() == "time" {
 			t1 := (time.Now().Hour()+3)%24 >= 16
 			t2 := (time.Now().Hour()+3)%24 <= 1
 			t3 := time.Now()
 			text := fmt.Sprintf("t1>=16 %t\nt2<=1 %t\ntime %v\nall %v\n", t1, t2, t3, len(users))
 			msg := tgbotapi.NewMessage(update.Message.Chat.ID, text)
 			_, _ = bot.Send(msg)
-		} else {
+			continue
+		}
+		_, ok := users[update.Message.Chat.ID]
+		if !ok {
 			users[update.Message.Chat.ID] = struct{}{}
 			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "слежу")
 			_, _ = bot.Send(msg)
