@@ -1,7 +1,7 @@
 package webScraper
 
 import (
-	"bytes"
+	"bufio"
 	"fmt"
 	"io"
 	"log"
@@ -13,8 +13,6 @@ import (
 	"github.com/CookieNyanCloud/web-scraper-agent/configs"
 	"github.com/gocolly/colly"
 	"github.com/xuri/excelize/v2"
-	"golang.org/x/text/encoding"
-	"golang.org/x/text/transform"
 )
 
 type Scraper struct {
@@ -34,7 +32,7 @@ type Scraper struct {
 type IScraper interface {
 	//media
 	Check() bool
-	Find() string
+	Find() (string, int)
 	GetLast() string
 	//no reg nko
 	CheckNoReg() (bool, error)
@@ -50,7 +48,7 @@ func NewScraper(conf *configs.Conf) IScraper {
 		minNRURL:  conf.MinNRURL,
 		startMin:  conf.StartMin,
 		url:       conf.URL,
-		lastNum:   109,
+		lastNum:   114,
 		dif:       0,
 		lastNRNKO: 8,
 		nkoAll:    72,
@@ -59,6 +57,7 @@ func NewScraper(conf *configs.Conf) IScraper {
 	}
 }
 
+//smi
 func (s *Scraper) Check() bool {
 	coll := colly.NewCollector()
 	coll.AllowURLRevisit = true
@@ -88,7 +87,7 @@ func (s *Scraper) Check() bool {
 	return false
 }
 
-func (s *Scraper) Find() string {
+func (s *Scraper) Find() (string, int) {
 	var text, query string
 	for i := s.lastNum - s.dif + 2; i < s.lastNum+2; i++ {
 		coll := colly.NewCollector()
@@ -99,11 +98,11 @@ func (s *Scraper) Find() string {
 		err := coll.Visit(s.url)
 		if err != nil {
 			log.Printf("err visiting %s: %v", s.url, err)
-			return ""
+			return "", 0
 		}
 	}
 	fmt.Println(text)
-	return text
+	return text, s.dif
 }
 
 func (s *Scraper) GetLast() string {
@@ -120,6 +119,29 @@ func (s *Scraper) GetLast() string {
 	}
 	fmt.Println(text)
 	return text
+}
+
+//no reg
+func (s *Scraper) CheckNoReg() (bool, error) {
+	var URL string
+	coll := colly.NewCollector()
+	coll.OnHTML("p a", func(e *colly.HTMLElement) {
+		URL = e.Attr("href")
+	})
+
+	err := coll.Visit(s.minNRURL)
+	if err != nil {
+		log.Printf("err visiting %s: %v", s.url, err)
+		return false, err
+	}
+	//return true, nil
+	fmt.Println("URLs ", s.startMin+URL, s.noRegURL)
+	fmt.Println(s.startMin+URL == s.noRegURL)
+	if s.startMin+URL != s.noRegURL {
+		s.noRegURL = s.startMin + URL
+		return true, nil
+	}
+	return false, nil
 }
 
 func (s *Scraper) GetLastNR() (string, error) {
@@ -152,28 +174,6 @@ func (s *Scraper) GetLastNR() (string, error) {
 	return rows[len(rows)-1][1], nil
 }
 
-func (s *Scraper) CheckNoReg() (bool, error) {
-	var URL string
-	coll := colly.NewCollector()
-	coll.OnHTML("p a", func(e *colly.HTMLElement) {
-		URL = e.Attr("href")
-	})
-
-	err := coll.Visit(s.minNRURL)
-	if err != nil {
-		log.Printf("err visiting %s: %v", s.url, err)
-		return false, err
-	}
-	//return true, nil
-	fmt.Println("URLs ", s.startMin+URL, s.noRegURL)
-	fmt.Println(s.startMin+URL == s.noRegURL)
-	if s.startMin+URL != s.noRegURL {
-		s.noRegURL = s.startMin + URL
-		return true, nil
-	}
-	return false, nil
-}
-
 func (s *Scraper) FindNoRegNKO() (string, error) {
 
 	err := DownloadFile("noreg.xlsx", s.noRegURL)
@@ -202,6 +202,7 @@ func (s *Scraper) FindNoRegNKO() (string, error) {
 	return out, nil
 }
 
+//nko
 func (s *Scraper) GetLastNKO() (bool, int, error) {
 	client := &http.Client{}
 	req, err := http.NewRequest("POST", s.nkoURL, strings.NewReader(s.nkoBody))
@@ -221,53 +222,32 @@ func (s *Scraper) GetLastNKO() (bool, int, error) {
 		return false, 0, err
 	}
 	defer resp.Body.Close()
-	var b bytes.Buffer
-	var r bytes.Buffer
-	_, err = io.Copy(&r, resp.Body)
+	scanner := bufio.NewScanner(resp.Body)
 	if err != nil {
-		fmt.Println("copy1:", err)
 		return false, 0, err
 	}
-	UTF8ToWin := transform.NewWriter(&b, encoding.UTF8Validator)
-	_, err = UTF8ToWin.Write(r.Bytes())
-	if err != nil {
-		fmt.Println("write:", err)
+	line := 1
+	for scanner.Scan() {
+		if line != 405 {
+			line++
+			continue
+		}
+		check := fmt.Sprintf("[1&nbsp;-&nbsp;%d]", s.nkoAll)
+		if !strings.Contains(scanner.Text(), check) {
+			for i := s.nkoAll; i < 1000; i++ {
+				fmt.Println(scanner.Text())
+				if strings.Contains(scanner.Text(), "[1&nbsp;-&nbsp;"+strconv.Itoa(i)+"]") {
+					s.nkoAll = i
+					break
+				}
+			}
+			return true, s.nkoAll, nil
+		}
+		break
+	}
+	if err := scanner.Err(); err != nil {
 		return false, 0, err
 	}
-	UTF8ToWin.Close()
-	file, err := os.Create("file.html")
-	_, err = io.Copy(file, resp.Body)
-	if err != nil {
-		fmt.Println("copy2:", err)
-		return false, 0, err
-	}
-
-	//scanner := bufio.NewScanner(resp.Body)
-	//if err != nil {
-	//	return false, 0, err
-	//}
-	//line := 1
-	//for scanner.Scan() {
-	//	if line != 405 {
-	//		line++
-	//		continue
-	//	}
-	//	check := fmt.Sprintf("[1&nbsp;-&nbsp;%d]", s.nkoAll)
-	//	if !strings.Contains(scanner.Text(), check) {
-	//		for i := s.nkoAll; i < 1000; i++ {
-	//			if strings.Contains(scanner.Text(), "[1&nbsp;-&nbsp;"+strconv.Itoa(i)+"]") {
-	//				s.nkoAll = i
-	//				break
-	//			}
-	//		}
-	//		fmt.Println(scanner.Text())
-	//		return true, s.nkoAll, nil
-	//	}
-	//	break
-	//}
-	//if err := scanner.Err(); err != nil {
-	//	return false, 0, err
-	//}
 	return false, s.nkoAll, err
 
 }

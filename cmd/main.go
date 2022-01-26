@@ -26,7 +26,7 @@ func main() {
 			case <-ticker.C:
 				if (time.Now().Hour()+3)%24 >= 15 || (time.Now().Hour()+3)%24 <= 1 {
 					if scraper.Check() {
-						s := scraper.Find()
+						s, _ := scraper.Find()
 						for k, _ := range users {
 							msg := tgbotapi.NewMessage(k, "объявлены иноагентами:\n"+s)
 							_, _ = bot.Send(msg)
@@ -37,6 +37,8 @@ func main() {
 						_, _ = bot.Send(msg)
 						msgURL := tgbotapi.NewMessage(conf.Chat, conf.URL)
 						_, _ = bot.Send(msgURL)
+						//toChannel := tgbotapi.NewMessageToChannel(conf.Chan, "объявлены иноагентами:\n"+s)
+						//_, _ = bot.Send(toChannel)
 					}
 					noRegnko, err := scraper.CheckNoReg()
 					if err != nil {
@@ -120,6 +122,7 @@ func main() {
 			users[update.Message.Chat.ID] = struct{}{}
 			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "слежу")
 			_, _ = bot.Send(msg)
+			continue
 		}
 
 	}
