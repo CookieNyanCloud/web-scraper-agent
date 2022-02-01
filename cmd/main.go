@@ -27,7 +27,7 @@ func main() {
 				if (time.Now().Hour()+3)%24 >= 15 || (time.Now().Hour()+3)%24 <= 1 {
 					if scraper.Check() {
 						s, _ := scraper.Find()
-						for k, _ := range users {
+						for k := range users {
 							msg := tgbotapi.NewMessage(k, "объявлены иноагентами:\n"+s)
 							_, _ = bot.Send(msg)
 							msgURL := tgbotapi.NewMessage(k, conf.URL)
@@ -49,7 +49,7 @@ func main() {
 						if err != nil {
 							fmt.Printf("err check no reg nko:%v", err)
 						}
-						for k, _ := range users {
+						for k := range users {
 							msg := tgbotapi.NewMessage(k, "объявлены иноагентами:\n"+nko)
 							_, _ = bot.Send(msg)
 							msgURL := tgbotapi.NewMessage(k, conf.NoRegURL)
@@ -61,8 +61,11 @@ func main() {
 						_, _ = bot.Send(msgURL)
 					}
 					lastNKO, all, err := scraper.GetLastNKO()
+					if err != nil {
+						fmt.Printf("err last nko:%v", err)
+					}
 					if lastNKO {
-						for k, _ := range users {
+						for k := range users {
 							msg := tgbotapi.NewMessage(k, "объявлены новые НКО:\n"+strconv.Itoa(all))
 							_, _ = bot.Send(msg)
 							msgURL := tgbotapi.NewMessage(k, conf.NKOURL)

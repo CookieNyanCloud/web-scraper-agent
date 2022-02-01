@@ -23,7 +23,6 @@ type Scraper struct {
 	lastNum   int
 	dif       int
 	lastNRNKO int
-	nkonkoDif int
 	nkoURL    string
 	nkoAll    int
 	nkoBody   string
@@ -51,7 +50,7 @@ func NewScraper(conf *configs.Conf) IScraper {
 		lastNum:   114,
 		dif:       0,
 		lastNRNKO: 8,
-		nkoAll:    73,
+		nkoAll:    72,
 		nkoURL:    conf.NKOURL,
 		nkoBody:   conf.NKOBody,
 	}
@@ -108,7 +107,7 @@ func (s *Scraper) Find() (string, int) {
 func (s *Scraper) GetLast() string {
 	var text, query string
 	coll := colly.NewCollector()
-	query = fmt.Sprint("tr:last-child td:nth-child(2)")
+	query = "tr:last-child td:nth-child(2)"
 	coll.OnHTML("table tbody", func(e *colly.HTMLElement) {
 		text = e.DOM.Find(query).Text() + "\n"
 	})
@@ -158,7 +157,9 @@ func (s *Scraper) GetLastNR() (string, error) {
 	}
 	fmt.Println("URL ", s.startMin+URL)
 	err = DownloadFile("noreg.xlsx", s.startMin+URL)
-
+	if err != nil {
+		return "", err
+	}
 	f, err := excelize.OpenFile("noreg.xlsx")
 	if err != nil {
 		return "", err
