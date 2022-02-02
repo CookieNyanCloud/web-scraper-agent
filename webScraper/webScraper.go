@@ -229,7 +229,7 @@ func (s *Scraper) GetLastNKO() (bool, int, error) {
 	}
 	line := 1
 	for scanner.Scan() {
-		if line != 300 {
+		if line != 405 {
 			line++
 			continue
 		}
