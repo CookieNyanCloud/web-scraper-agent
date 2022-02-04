@@ -50,7 +50,7 @@ func NewScraper(conf *configs.Conf) IScraper {
 		lastNum:   114,
 		dif:       0,
 		lastNRNKO: 8,
-		nkoAll:    72,
+		nkoAll:    73,
 		nkoURL:    conf.NKOURL,
 		nkoBody:   conf.NKOBody,
 	}
