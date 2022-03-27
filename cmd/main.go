@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/CookieNyanCloud/web-scraper-agent/configs"
@@ -24,7 +25,7 @@ func main() {
 		for {
 			select {
 			case <-ticker.C:
-				if (time.Now().Hour()+3)%24 >= 15 || (time.Now().Hour()+3)%24 <= 1 {
+				if (time.Now().Hour()+3)%24 >= 10 || (time.Now().Hour()+3)%24 <= 1 {
 					if scraper.Check() {
 						s, _ := scraper.Find()
 						for k := range users {
@@ -77,6 +78,21 @@ func main() {
 						msgURL := tgbotapi.NewMessage(conf.Chat, conf.NKOURL)
 						_, _ = bot.Send(msgURL)
 					}
+
+					if scraper.CheckZapr() {
+						s := strings.Join(scraper.FindZapr(), "\n")
+						for k := range users {
+							msg := tgbotapi.NewMessage(k, "запрещены сайты:\n"+s)
+							_, _ = bot.Send(msg)
+							msgURL := tgbotapi.NewMessage(k, conf.URL)
+							_, _ = bot.Send(msgURL)
+						}
+						msg := tgbotapi.NewMessage(conf.Chat, "запрещены сайты:\n"+s)
+						_, _ = bot.Send(msg)
+						msgURL := tgbotapi.NewMessage(conf.Chat, conf.URL)
+						_, _ = bot.Send(msgURL)
+
+					}
 				}
 			}
 		}
@@ -101,12 +117,17 @@ func main() {
 			if err != nil {
 				fmt.Printf("nko: %v", err)
 			}
+			lastZapr := scraper.GetLastZapr()
+			if err != nil {
+				fmt.Printf("сайт: %v", err)
+			}
 			textSMI := fmt.Sprintf("последний в списке иноагентов:%s\n\n", lastSMI)
 			textNRNKO := fmt.Sprintf("последний в списке незарегестрированных НКО:%s\n", lastNoReg)
-			textNKO := fmt.Sprintf("новыев  списке НКО:%t,%d\n", lastNKO, all)
-			allURL := fmt.Sprintf("%s\n%s\n%s\n", conf.URL, conf.NKOURL, conf.NoRegURL)
+			textNKO := fmt.Sprintf("новые в  списке НКО:%t,%d\n", lastNKO, all)
+			textZapr := fmt.Sprintf("новые запрещенные сайты:%s\n", lastZapr)
+			allURL := fmt.Sprintf("%s\n%s\n%s\n%s\n", conf.URL, conf.NKOURL, conf.NoRegURL, conf.ZaprURL)
 			fmt.Println(conf)
-			msg := tgbotapi.NewMessage(update.Message.Chat.ID, textSMI+textNRNKO+textNKO+allURL)
+			msg := tgbotapi.NewMessage(update.Message.Chat.ID, textSMI+textNRNKO+textNKO+textZapr+allURL)
 			_, _ = bot.Send(msg)
 			continue
 		}

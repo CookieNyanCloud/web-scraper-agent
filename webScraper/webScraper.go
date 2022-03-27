@@ -26,6 +26,8 @@ type Scraper struct {
 	nkoURL    string
 	nkoAll    int
 	nkoBody   string
+	zaprURL   string
+	lastZapr  string
 }
 
 type IScraper interface {
@@ -39,6 +41,10 @@ type IScraper interface {
 	GetLastNR() (string, error)
 	//nko
 	GetLastNKO() (bool, int, error)
+	//zapr
+	CheckZapr() bool
+	FindZapr() []string
+	GetLastZapr() string
 }
 
 func NewScraper(conf *configs.Conf) IScraper {
@@ -47,12 +53,14 @@ func NewScraper(conf *configs.Conf) IScraper {
 		minNRURL:  conf.MinNRURL,
 		startMin:  conf.StartMin,
 		url:       conf.URL,
-		lastNum:   114,
+		lastNum:   117,
 		dif:       0,
-		lastNRNKO: 8,
-		nkoAll:    72,
+		lastNRNKO: 9,
+		nkoAll:    74,
 		nkoURL:    conf.NKOURL,
 		nkoBody:   conf.NKOBody,
+		zaprURL:   conf.ZaprURL,
+		lastZapr:  "bambooq.su",
 	}
 }
 
@@ -277,4 +285,69 @@ func DownloadFile(filepath, url string) error {
 	defer out.Close()
 	_, err = io.Copy(out, resp.Body)
 	return err
+}
+
+//zapr
+func (s *Scraper) CheckZapr() bool {
+	coll := colly.NewCollector()
+	coll.AllowURLRevisit = true
+	var newZapr string
+	coll.OnHTML("table tbody", func(e *colly.HTMLElement) {
+		newZapr = strings.Trim(e.DOM.Find("tr:nth-child(1) td:nth-child(3)").Text(), "\n")
+	})
+
+	err := coll.Visit(s.zaprURL)
+	if err != nil {
+		log.Printf("err visiting %s: %v", s.zaprURL, err)
+	}
+	if newZapr == "" {
+		return false
+	}
+
+	if newZapr != s.lastZapr {
+		return true
+	}
+	return false
+}
+
+func (s *Scraper) FindZapr() []string {
+	coll := colly.NewCollector()
+	coll.AllowURLRevisit = true
+	var newZapr string
+	out := make([]string, 0)
+	i := 0
+	for {
+		i++
+		search := fmt.Sprintf("tr:nth-child(%d) td:nth-child(3)", i)
+		coll.OnHTML("table tbody", func(e *colly.HTMLElement) {
+			newZapr = strings.Trim(e.DOM.Find(search).Text(), "\n")
+		})
+		err := coll.Visit(s.zaprURL)
+		if err != nil {
+			log.Printf("err visiting %s: %v", s.url, err)
+		}
+		if newZapr != s.lastZapr {
+			out = append(out, newZapr)
+		} else {
+			break
+		}
+	}
+	if len(out) > 0 {
+		s.lastZapr = out[0]
+	}
+	return out
+}
+func (s *Scraper) GetLastZapr() string {
+	coll := colly.NewCollector()
+	coll.AllowURLRevisit = true
+	var newZapr string
+	coll.OnHTML("table tbody", func(e *colly.HTMLElement) {
+		newZapr = strings.Trim(e.DOM.Find("tr:first-child td:nth-child(3)").Text(), "\n")
+	})
+	err := coll.Visit(s.zaprURL)
+	if err != nil {
+		log.Printf("err visiting %s: %v", s.zaprURL, err)
+	}
+
+	return newZapr
 }

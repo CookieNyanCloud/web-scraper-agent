@@ -17,6 +17,7 @@ type Conf struct {
 	Chat     int64
 	NKOURL   string
 	NKOBody  string
+	ZaprURL  string
 }
 
 func InitConf() *Conf {
@@ -44,5 +45,6 @@ func envVar(local bool) *Conf {
 		chat,
 		os.Getenv("NKOURL"),
 		os.Getenv("NKOBODY"),
+		os.Getenv("ZAPR_REESTR"),
 	}
 }
