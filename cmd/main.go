@@ -25,7 +25,7 @@ func main() {
 		for {
 			select {
 			case <-ticker.C:
-				if (time.Now().Hour()+3)%24 >= 10 || (time.Now().Hour()+3)%24 <= 1 {
+				if (time.Now().Hour()+3)%24 >= 15 || (time.Now().Hour()+3)%24 <= 1 {
 					if scraper.Check() {
 						s, _ := scraper.Find()
 						for k := range users {
@@ -89,7 +89,7 @@ func main() {
 						}
 						msg := tgbotapi.NewMessage(conf.Chat, "запрещены сайты:\n"+s)
 						_, _ = bot.Send(msg)
-						msgURL := tgbotapi.NewMessage(conf.Chat, conf.URL)
+						msgURL := tgbotapi.NewMessage(conf.Chat, conf.ZaprURL)
 						_, _ = bot.Send(msgURL)
 
 					}
