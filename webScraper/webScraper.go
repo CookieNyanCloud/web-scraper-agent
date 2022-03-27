@@ -60,7 +60,7 @@ func NewScraper(conf *configs.Conf) IScraper {
 		nkoURL:    conf.NKOURL,
 		nkoBody:   conf.NKOBody,
 		zaprURL:   conf.ZaprURL,
-		lastZapr:  "bambooq.su",
+		lastZapr:  "nevzorov.tv ",
 	}
 }
 
