@@ -200,7 +200,6 @@ func (s *Scraper) FindNoRegNKO() (string, error) {
 	var out string
 
 	for i := s.lastNRNKO; i < len(rows); i++ {
-		fmt.Println(i, rows[i][1])
 		out += fmt.Sprintf("%v%v\n", rows[i][0], rows[i][1])
 	}
 	s.lastNRNKO = len(rows)
