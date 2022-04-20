@@ -322,7 +322,7 @@ func (s *Scraper) CheckFiz() bool {
 
 func (s *Scraper) FindFiz() (string, int) {
 	var text, query string
-	for i := s.lastNum - s.dif + 2; i < s.lastNum+2; i++ {
+	for i := s.lastFiz - s.difFiz + 2; i < s.lastFiz+2; i++ {
 		coll := colly.NewCollector()
 		query = fmt.Sprintf("tr:nth-child(%d) td:nth-child(2)", i)
 		coll.OnHTML("table tbody", func(e *colly.HTMLElement) {
@@ -330,12 +330,12 @@ func (s *Scraper) FindFiz() (string, int) {
 		})
 		err := coll.Visit(s.FizURL)
 		if err != nil {
-			log.Printf("err visiting %s: %v", s.url, err)
+			log.Printf("err visiting %s: %v", s.FizURL, err)
 			return "", 0
 		}
 	}
 	fmt.Println(text)
-	return text, s.dif
+	return text, s.difFiz
 }
 
 func (s *Scraper) GetLastFiz() string {
@@ -347,7 +347,7 @@ func (s *Scraper) GetLastFiz() string {
 	})
 	err := coll.Visit(s.FizURL)
 	if err != nil {
-		log.Printf("err visiting %s: %v", s.url, err)
+		log.Printf("err visiting %s: %v", s.FizURL, err)
 		return ""
 	}
 	return text
