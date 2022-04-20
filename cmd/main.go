@@ -19,7 +19,7 @@ func main() {
 	bot, updates := sotatgbot.StartSotaBot(conf.Token)
 
 	go func() {
-		ticker := time.NewTicker(time.Minute / 20)
+		ticker := time.NewTicker(time.Minute)
 		for {
 			select {
 			case <-ticker.C:
