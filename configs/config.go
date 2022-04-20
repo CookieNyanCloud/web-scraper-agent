@@ -2,6 +2,7 @@ package configs
 
 import (
 	"flag"
+	"fmt"
 	"os"
 	"strconv"
 
@@ -17,7 +18,7 @@ type Conf struct {
 	Chat     int64
 	NKOURL   string
 	NKOBody  string
-	ZaprURL  string
+	FizURL   string
 }
 
 func InitConf() *Conf {
@@ -35,7 +36,12 @@ func envVar(local bool) *Conf {
 			return &Conf{}
 		}
 	}
-	chat, _ := strconv.ParseInt(os.Getenv("CHAT"), 10, 64)
+	chatID := os.Getenv("CHAT")
+	chat, err := strconv.ParseInt(chatID, 10, 64)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
 	return &Conf{
 		os.Getenv("NOREGURL"),
 		os.Getenv("MINNRURL"),
@@ -45,6 +51,6 @@ func envVar(local bool) *Conf {
 		chat,
 		os.Getenv("NKOURL"),
 		os.Getenv("NKOBODY"),
-		os.Getenv("ZAPR_REESTR"),
+		os.Getenv("FIZ_URL"),
 	}
 }

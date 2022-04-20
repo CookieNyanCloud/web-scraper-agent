@@ -28,6 +28,9 @@ type Scraper struct {
 	nkoBody   string
 	zaprURL   string
 	lastZapr  string
+	FizURL    string
+	lastFiz   int
+	difFiz    int
 }
 
 type IScraper interface {
@@ -41,10 +44,10 @@ type IScraper interface {
 	GetLastNR() (string, error)
 	//nko
 	GetLastNKO() (bool, int, error)
-	//zapr
-	CheckZapr() bool
-	FindZapr() []string
-	GetLastZapr() string
+	//fiz
+	CheckFiz() bool
+	FindFiz() (string, int)
+	GetLastFiz() string
 }
 
 func NewScraper(conf *configs.Conf) IScraper {
@@ -53,14 +56,15 @@ func NewScraper(conf *configs.Conf) IScraper {
 		minNRURL:  conf.MinNRURL,
 		startMin:  conf.StartMin,
 		url:       conf.URL,
-		lastNum:   117,
+		lastNum:   141,
 		dif:       0,
 		lastNRNKO: 9,
-		nkoAll:    74,
+		nkoAll:    72,
 		nkoURL:    conf.NKOURL,
 		nkoBody:   conf.NKOBody,
-		zaprURL:   conf.ZaprURL,
-		lastZapr:  "nevzorov.tv",
+		lastFiz:   1,
+		FizURL:    conf.FizURL,
+		difFiz:    0,
 	}
 }
 
@@ -244,7 +248,6 @@ func (s *Scraper) GetLastNKO() (bool, int, error) {
 		check := fmt.Sprintf("[1&nbsp;-&nbsp;%d]", s.nkoAll)
 		if !strings.Contains(scanner.Text(), check) {
 			for i := s.nkoAll; i < 1000; i++ {
-				fmt.Println(scanner.Text())
 				if strings.Contains(scanner.Text(), "[1&nbsp;-&nbsp;"+strconv.Itoa(i)+"]") {
 					s.nkoAll = i
 					break
@@ -287,67 +290,65 @@ func DownloadFile(filepath, url string) error {
 	return err
 }
 
-//zapr
-func (s *Scraper) CheckZapr() bool {
+// fix
+func (s *Scraper) CheckFiz() bool {
 	coll := colly.NewCollector()
 	coll.AllowURLRevisit = true
-	var newZapr string
+	var numStr string
 	coll.OnHTML("table tbody", func(e *colly.HTMLElement) {
-		newZapr = strings.Trim(e.DOM.Find("tr:nth-child(1) td:nth-child(3)").Text(), "\n")
+		numStr = e.DOM.Find("tr:last-child td:nth-child(1)").Text()
 	})
-
-	err := coll.Visit(s.zaprURL)
+	err := coll.Visit(s.FizURL)
 	if err != nil {
-		log.Printf("err visiting %s: %v", s.zaprURL, err)
+		log.Printf("err visiting %s: %v", s.FizURL, err)
 	}
-	if newZapr == "" {
+	if numStr == "" {
 		return false
 	}
-
-	if newZapr != s.lastZapr {
+	sf := strings.TrimSuffix(numStr, ".")
+	numF, err := strconv.Atoi(sf)
+	if err != nil {
+		log.Printf("err getting last number: %v", err)
+	}
+	num := numF
+	if num > s.lastFiz {
+		fmt.Println(num, s.lastFiz)
+		s.difFiz = num - s.lastFiz
+		s.lastFiz = num
 		return true
 	}
 	return false
 }
 
-func (s *Scraper) FindZapr() []string {
-	coll := colly.NewCollector()
-	coll.AllowURLRevisit = true
-	var newZapr string
-	out := make([]string, 0)
-	i := 0
-	for {
-		i++
-		search := fmt.Sprintf("tr:nth-child(%d) td:nth-child(3)", i)
+func (s *Scraper) FindFiz() (string, int) {
+	var text, query string
+	for i := s.lastNum - s.dif + 2; i < s.lastNum+2; i++ {
+		coll := colly.NewCollector()
+		query = fmt.Sprintf("tr:nth-child(%d) td:nth-child(2)", i)
 		coll.OnHTML("table tbody", func(e *colly.HTMLElement) {
-			newZapr = strings.Trim(e.DOM.Find(search).Text(), "\n")
+			text += strconv.Itoa(i-1) + ")" + e.DOM.Find(query).Text() + "\n"
 		})
-		err := coll.Visit(s.zaprURL)
+		err := coll.Visit(s.FizURL)
 		if err != nil {
 			log.Printf("err visiting %s: %v", s.url, err)
-		}
-		if newZapr != s.lastZapr {
-			out = append(out, newZapr)
-		} else {
-			break
+			return "", 0
 		}
 	}
-	if len(out) > 0 {
-		s.lastZapr = out[0]
-	}
-	return out
+	fmt.Println(text)
+	return text, s.dif
 }
-func (s *Scraper) GetLastZapr() string {
-	coll := colly.NewCollector()
-	coll.AllowURLRevisit = true
-	var newZapr string
-	coll.OnHTML("table tbody", func(e *colly.HTMLElement) {
-		newZapr = strings.Trim(e.DOM.Find("tr:first-child td:nth-child(3)").Text(), "\n")
-	})
-	err := coll.Visit(s.zaprURL)
-	if err != nil {
-		log.Printf("err visiting %s: %v", s.zaprURL, err)
-	}
 
-	return newZapr
+func (s *Scraper) GetLastFiz() string {
+	var text, query string
+	coll := colly.NewCollector()
+	query = "tr:last-child td:nth-child(2)"
+	coll.OnHTML("table tbody", func(e *colly.HTMLElement) {
+		text = e.DOM.Find(query).Text() + "\n"
+	})
+	err := coll.Visit(s.FizURL)
+	if err != nil {
+		log.Printf("err visiting %s: %v", s.url, err)
+		return ""
+	}
+	return text
 }
