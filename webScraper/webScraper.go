@@ -31,6 +31,7 @@ type Scraper struct {
 	FizURL    string
 	lastFiz   int
 	difFiz    int
+	lastnoReg string
 }
 
 type IScraper interface {
@@ -65,6 +66,7 @@ func NewScraper(conf *configs.Conf) IScraper {
 		lastFiz:   1,
 		FizURL:    conf.FizURL,
 		difFiz:    0,
+		lastnoReg: "Инициативная группа ЛГБТ+ «Реверс»",
 	}
 }
 
@@ -134,25 +136,15 @@ func (s *Scraper) GetLast() string {
 
 //no reg
 func (s *Scraper) CheckNoReg() (bool, error) {
-	var URL string
-	coll := colly.NewCollector()
-	coll.OnHTML("p a", func(e *colly.HTMLElement) {
-		URL = e.Attr("href")
-	})
-
-	err := coll.Visit(s.minNRURL)
+	last, err := s.GetLastNR()
 	if err != nil {
-		log.Printf("err visiting %s: %v", s.url, err)
 		return false, err
 	}
-	//return true, nil
-	fmt.Println("URLs ", s.startMin+URL, s.noRegURL)
-	fmt.Println(s.startMin+URL == s.noRegURL)
-	if s.startMin+URL != s.noRegURL {
-		s.noRegURL = s.startMin + URL
-		return true, nil
+	if last == s.lastnoReg {
+		return false, nil
 	}
-	return false, nil
+	s.lastnoReg = last
+	return true, nil
 }
 
 func (s *Scraper) GetLastNR() (string, error) {
@@ -290,7 +282,7 @@ func DownloadFile(filepath, url string) error {
 	return err
 }
 
-// fix
+// fiz
 func (s *Scraper) CheckFiz() bool {
 	coll := colly.NewCollector()
 	coll.AllowURLRevisit = true
