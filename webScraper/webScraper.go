@@ -244,7 +244,7 @@ func (s *Scraper) GetLastNKO() (bool, int, error) {
 					break
 				}
 				if strings.Contains(scanner.Text(), "[1&nbsp;-&nbsp;"+strconv.Itoa(300-i)+"]") {
-					s.nkoAll = i
+					s.nkoAll = 300 - i
 					break
 				}
 			}
