@@ -226,10 +226,19 @@ func (s *Scraper) GetLastNKO() (bool, int, error) {
 		return false, 0, err
 	}
 	defer resp.Body.Close()
+
 	scanner := bufio.NewScanner(resp.Body)
 	if err != nil {
 		return false, 0, err
 	}
+
+	out, err := os.Create("filename.html")
+	if err != nil {
+		return false, 0, err
+	}
+	defer out.Close()
+	io.Copy(out, resp.Body)
+
 	line := 1
 	for scanner.Scan() {
 		if line != 405 {

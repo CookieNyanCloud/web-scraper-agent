@@ -19,11 +19,12 @@ func main() {
 	bot, updates := sotatgbot.StartSotaBot(conf.Token)
 
 	go func() {
-		ticker := time.NewTicker(time.Minute)
+		ticker := time.NewTicker(time.Minute / 20)
 		for {
 			select {
 			case <-ticker.C:
-				if (time.Now().Hour()+3)%24 >= 14 || (time.Now().Hour()+3)%24 <= 1 {
+				// if (time.Now().Hour()+3)%24 >= 14 || (time.Now().Hour()+3)%24 <= 1 {
+				if true {
 					// smi
 					if scraper.Check() {
 						s, _ := scraper.Find()
