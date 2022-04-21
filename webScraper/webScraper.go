@@ -60,7 +60,7 @@ func NewScraper(conf *configs.Conf) IScraper {
 		lastNum:   141,
 		dif:       0,
 		lastNRNKO: 9,
-		nkoAll:    72,
+		nkoAll:    75,
 		nkoURL:    conf.NKOURL,
 		nkoBody:   conf.NKOBody,
 		lastFiz:   1,
@@ -238,8 +238,12 @@ func (s *Scraper) GetLastNKO() (bool, int, error) {
 		}
 		check := fmt.Sprintf("[1&nbsp;-&nbsp;%d]", s.nkoAll)
 		if !strings.Contains(scanner.Text(), check) {
-			for i := s.nkoAll; i < 1000; i++ {
+			for i := s.nkoAll; i < 300; i++ {
 				if strings.Contains(scanner.Text(), "[1&nbsp;-&nbsp;"+strconv.Itoa(i)+"]") {
+					s.nkoAll = i
+					break
+				}
+				if strings.Contains(scanner.Text(), "[1&nbsp;-&nbsp;"+strconv.Itoa(300-i)+"]") {
 					s.nkoAll = i
 					break
 				}
