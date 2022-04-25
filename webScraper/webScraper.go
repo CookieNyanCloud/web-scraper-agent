@@ -25,6 +25,7 @@ type Scraper struct {
 	lastNRNKO int
 	nkoURL    string
 	nkoAll    int
+	line      int
 	nkoBody   string
 	zaprURL   string
 	lastZapr  string
@@ -35,6 +36,8 @@ type Scraper struct {
 }
 
 type IScraper interface {
+	SetLine(line int)
+	SetAll(all int)
 	//media
 	Check() bool
 	Find() (string, int)
@@ -61,6 +64,7 @@ func NewScraper(conf *configs.Conf) IScraper {
 		dif:       0,
 		lastNRNKO: 9,
 		nkoAll:    75,
+		line:      300,
 		nkoURL:    conf.NKOURL,
 		nkoBody:   conf.NKOBody,
 		lastFiz:   1,
@@ -68,6 +72,13 @@ func NewScraper(conf *configs.Conf) IScraper {
 		difFiz:    0,
 		lastnoReg: "Инициативная группа ЛГБТ+ «Реверс»",
 	}
+}
+func (s *Scraper) SetLine(line int) {
+	s.line = line
+}
+
+func (s *Scraper) SetAll(all int) {
+	s.nkoAll = all
 }
 
 //smi
@@ -241,7 +252,7 @@ func (s *Scraper) GetLastNKO() (bool, int, error) {
 
 	line := 1
 	for scanner.Scan() {
-		if line != 405 {
+		if line != s.line {
 			line++
 			continue
 		}

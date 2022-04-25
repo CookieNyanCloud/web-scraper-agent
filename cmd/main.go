@@ -19,12 +19,11 @@ func main() {
 	bot, updates := sotatgbot.StartSotaBot(conf.Token)
 
 	go func() {
-		ticker := time.NewTicker(time.Minute / 20)
+		ticker := time.NewTicker(time.Minute)
 		for {
 			select {
 			case <-ticker.C:
-				// if (time.Now().Hour()+3)%24 >= 14 || (time.Now().Hour()+3)%24 <= 1 {
-				if true {
+				if (time.Now().Hour()+3)%24 >= 14 || (time.Now().Hour()+3)%24 <= 1 {
 					// smi
 					if scraper.Check() {
 						s, _ := scraper.Find()
@@ -111,6 +110,21 @@ func main() {
 			_, _ = bot.Send(msg)
 			continue
 		}
+
+		if update.Message.Command() == "set" {
+			i, err := strconv.Atoi(update.Message.CommandArguments())
+			if err != nil {
+				continue
+			}
+			switch update.Message.CommandArguments() {
+			case "all":
+				scraper.SetAll(i)
+			case "line":
+				scraper.SetLine(i)
+			}
+			continue
+		}
+
 	}
 
 }
