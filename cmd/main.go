@@ -111,17 +111,20 @@ func main() {
 			continue
 		}
 
-		if update.Message.Command() == "set" {
+		if update.Message.Command() == "setall" {
 			i, err := strconv.Atoi(update.Message.CommandArguments())
 			if err != nil {
 				continue
 			}
-			switch update.Message.CommandArguments() {
-			case "all":
-				scraper.SetAll(i)
-			case "line":
-				scraper.SetLine(i)
+			scraper.SetAll(i)
+			continue
+		}
+		if update.Message.Command() == "setline" {
+			i, err := strconv.Atoi(update.Message.CommandArguments())
+			if err != nil {
+				continue
 			}
+			scraper.SetLine(i)
 			continue
 		}
 
