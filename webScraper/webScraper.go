@@ -61,14 +61,14 @@ func NewScraper(conf *configs.Conf) IScraper {
 		minNRURL:  conf.MinNRURL,
 		startMin:  conf.StartMin,
 		url:       conf.URL,
-		lastNum:   141,
+		lastNum:   149,
 		dif:       0,
 		lastNRNKO: 9,
 		nkoAll:    75,
 		line:      405,
 		nkoURL:    conf.NKOURL,
 		nkoBody:   conf.NKOBody,
-		lastFiz:   1,
+		lastFiz:   3,
 		FizURL:    conf.FizURL,
 		difFiz:    0,
 		lastnoReg: "Инициативная группа ЛГБТ+ «Реверс»",
@@ -251,10 +251,13 @@ func (s *Scraper) GetLastNKO() (bool, int, error) {
 		return false, 0, err
 	}
 
-	line := 1
+	// line := 1
 	for scanner.Scan() {
-		if line != s.line {
-			line++
+		// if line != s.line  {
+		// 	line++
+		// 	continue
+		// }
+		if strings.Contains(scanner.Text(), `<td class="pdg_pos"><b>������� �������:&nbsp;`) {
 			continue
 		}
 		check := fmt.Sprintf("[1&nbsp;-&nbsp;%d]", s.nkoAll)
