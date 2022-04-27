@@ -38,7 +38,7 @@ type Scraper struct {
 type IScraper interface {
 	SetLine(line int)
 	SetAll(all int)
-	getData() []string
+	GetData() []string
 	//media
 	Check() bool
 	Find() (string, int)
@@ -82,7 +82,7 @@ func (s *Scraper) SetAll(all int) {
 	s.nkoAll = all
 }
 
-func (s *Scraper) getData() []string {
+func (s *Scraper) GetData() []string {
 	out := make([]string, 2)
 	out = append(out, strconv.Itoa(s.line))
 	out = append(out, strconv.Itoa(s.nkoAll))
