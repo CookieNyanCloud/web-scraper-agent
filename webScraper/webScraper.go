@@ -257,7 +257,7 @@ func (s *Scraper) GetLastNKO() (bool, int, error) {
 		// 	line++
 		// 	continue
 		// }
-		if strings.Contains(scanner.Text(), `<td class="pdg_pos"><b>������� �������:&nbsp;`) {
+		if !strings.Contains(scanner.Text(), `<td class="pdg_pos"><b>������� �������:&nbsp;`) {
 			continue
 		}
 		check := fmt.Sprintf("[1&nbsp;-&nbsp;%d]", s.nkoAll)
