@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/CookieNyanCloud/web-scraper-agent/configs"
@@ -125,6 +126,13 @@ func main() {
 				continue
 			}
 			scraper.SetLine(i)
+			continue
+		}
+		if update.Message.Command() == "getdata" {
+
+			out := strings.Join(scraper.GetData(), ",")
+			msg := tgbotapi.NewMessage(update.Message.Chat.ID, out)
+			_, _ = bot.Send(msg)
 			continue
 		}
 

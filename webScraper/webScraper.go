@@ -38,6 +38,7 @@ type Scraper struct {
 type IScraper interface {
 	SetLine(line int)
 	SetAll(all int)
+	getData() []string
 	//media
 	Check() bool
 	Find() (string, int)
@@ -64,7 +65,7 @@ func NewScraper(conf *configs.Conf) IScraper {
 		dif:       0,
 		lastNRNKO: 9,
 		nkoAll:    75,
-		line:      300,
+		line:      405,
 		nkoURL:    conf.NKOURL,
 		nkoBody:   conf.NKOBody,
 		lastFiz:   1,
@@ -79,6 +80,13 @@ func (s *Scraper) SetLine(line int) {
 
 func (s *Scraper) SetAll(all int) {
 	s.nkoAll = all
+}
+
+func (s *Scraper) getData() []string {
+	out := make([]string, 2)
+	out = append(out, strconv.Itoa(s.line))
+	out = append(out, strconv.Itoa(s.nkoAll))
+	return out
 }
 
 //smi
@@ -242,13 +250,6 @@ func (s *Scraper) GetLastNKO() (bool, int, error) {
 	if err != nil {
 		return false, 0, err
 	}
-
-	// out, err := os.Create("filename.html")
-	// if err != nil {
-	// 	return false, 0, err
-	// }
-	// defer out.Close()
-	// io.Copy(out, resp.Body)
 
 	line := 1
 	for scanner.Scan() {
