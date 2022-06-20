@@ -3,6 +3,7 @@ version: '3.3'
 services:
   web-scraper-agent:
     image: web-scraper-agent
+    restart: always
     build: ./
     env_file:
       - .env
