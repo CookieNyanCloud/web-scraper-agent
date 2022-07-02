@@ -61,17 +61,17 @@ func NewScraper(conf *configs.Conf) IScraper {
 		minNRURL:  conf.MinNRURL,
 		startMin:  conf.StartMin,
 		url:       conf.URL,
-		lastNum:   149,
+		lastNum:   conf.Lasts.LastNum,
 		dif:       0,
-		lastNRNKO: 9,
-		nkoAll:    75,
-		line:      405,
+		lastNRNKO: conf.Lasts.LastNRNKO,
+		nkoAll:    conf.Lasts.NkoAll,
+		line:      conf.Lasts.Line,
 		nkoURL:    conf.NKOURL,
 		nkoBody:   conf.NKOBody,
-		lastFiz:   3,
+		lastFiz:   conf.Lasts.LastFiz,
 		FizURL:    conf.FizURL,
 		difFiz:    0,
-		lastnoReg: "Инициативная группа ЛГБТ+ «Реверс»",
+		lastnoReg: conf.Lasts.LastnoReg,
 	}
 }
 func (s *Scraper) SetLine(line int) {

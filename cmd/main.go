@@ -19,7 +19,7 @@ func main() {
 	scraper := webScraper.NewScraper(conf)
 	bot, updates := sotatgbot.StartSotaBot(conf.Token)
 
-	go func() {
+	go func(conf *configs.Conf) {
 		ticker := time.NewTicker(time.Minute)
 		for {
 			select {
@@ -30,6 +30,10 @@ func main() {
 						s, _ := scraper.Find()
 						msg := tgbotapi.NewMessage(conf.Chat, "объявлены иноагентами:\n"+s+"\n"+conf.URL)
 						_, _ = bot.Send(msg)
+						err := configs.SaveLasts(conf)
+						if err != nil {
+							fmt.Printf("err SaveLasts:%v", err)
+						}
 					}
 
 					// no reg
@@ -44,6 +48,10 @@ func main() {
 						}
 						msg := tgbotapi.NewMessage(conf.Chat, "объявлены иноагентами:\n"+nko+"\n"+conf.NoRegURL)
 						_, _ = bot.Send(msg)
+						err = configs.SaveLasts(conf)
+						if err != nil {
+							fmt.Printf("err SaveLasts:%v", err)
+						}
 					}
 
 					// nko
@@ -54,6 +62,10 @@ func main() {
 					if lastNKO {
 						msg := tgbotapi.NewMessage(conf.Chat, "объявлены новые НКО:\n"+strconv.Itoa(all)+"\n"+conf.NKOURL)
 						_, _ = bot.Send(msg)
+						err := configs.SaveLasts(conf)
+						if err != nil {
+							fmt.Printf("err SaveLasts:%v", err)
+						}
 					}
 
 					// fiz
@@ -61,12 +73,16 @@ func main() {
 						s, _ := scraper.FindFiz()
 						msg := tgbotapi.NewMessage(conf.Chat, "объявлены иноагентами физлицами:\n"+s+"\n"+conf.FizURL)
 						_, _ = bot.Send(msg)
+						err := configs.SaveLasts(conf)
+						if err != nil {
+							fmt.Printf("err SaveLasts:%v", err)
+						}
 					}
 				}
 			}
 		}
 
-	}()
+	}(conf)
 
 	for update := range updates {
 
@@ -132,6 +148,13 @@ func main() {
 
 			out := strings.Join(scraper.GetData(), ",")
 			msg := tgbotapi.NewMessage(update.Message.Chat.ID, out)
+			_, _ = bot.Send(msg)
+			continue
+		}
+
+		if update.Message.Command() == "getLast" {
+
+			msg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("%v",conf))
 			_, _ = bot.Send(msg)
 			continue
 		}
