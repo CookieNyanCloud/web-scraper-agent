@@ -33,6 +33,7 @@ type Scraper struct {
 	lastFiz   int
 	difFiz    int
 	lastnoReg string
+	cfg *configs.Conf
 }
 
 type IScraper interface {
@@ -72,8 +73,10 @@ func NewScraper(conf *configs.Conf) IScraper {
 		FizURL:    conf.FizURL,
 		difFiz:    0,
 		lastnoReg: conf.Lasts.LastnoReg,
+		cfg:conf,
 	}
 }
+
 func (s *Scraper) SetLine(line int) {
 	s.line = line
 }
@@ -114,6 +117,7 @@ func (s *Scraper) Check() bool {
 		fmt.Println(num, s.lastNum)
 		s.dif = num - s.lastNum
 		s.lastNum = num
+		s.cfg.Lasts.LastNum = num
 		return true
 	}
 	return false
@@ -133,7 +137,6 @@ func (s *Scraper) Find() (string, int) {
 			return "", 0
 		}
 	}
-	fmt.Println(text)
 	return text, s.dif
 }
 
@@ -163,6 +166,7 @@ func (s *Scraper) CheckNoReg() (bool, error) {
 		return false, nil
 	}
 	s.lastnoReg = last
+	s.cfg.Lasts.LastnoReg = last
 	return true, nil
 }
 
@@ -199,8 +203,17 @@ func (s *Scraper) GetLastNR() (string, error) {
 }
 
 func (s *Scraper) FindNoRegNKO() (string, error) {
-
-	err := DownloadFile("noreg.xlsx", s.noRegURL)
+	var URL string
+	coll := colly.NewCollector()
+	coll.OnHTML("p a", func(e *colly.HTMLElement) {
+		URL = e.Attr("href")
+	})
+	err := coll.Visit(s.minNRURL)
+	if err != nil {
+		return "", err
+	}
+	s.noRegURL = URL
+	err = DownloadFile("noreg.xlsx", s.startMin+URL)
 	if err != nil {
 		return "", err
 	}
@@ -220,8 +233,11 @@ func (s *Scraper) FindNoRegNKO() (string, error) {
 
 	for i := s.lastNRNKO; i < len(rows); i++ {
 		out += fmt.Sprintf("%v%v\n", rows[i][0], rows[i][1])
+		if i == len(rows) -1 {
+			s.lastNRNKO = len(rows)
+			s.cfg.Lasts.LastNRNKO = len(rows)
+		}
 	}
-	s.lastNRNKO = len(rows)
 	return out, nil
 }
 
@@ -272,6 +288,7 @@ func (s *Scraper) GetLastNKO() (bool, int, error) {
 					break
 				}
 			}
+			s.cfg.Lasts.NkoAll = s.nkoAll
 			return true, s.nkoAll, nil
 		}
 		break
@@ -334,6 +351,7 @@ func (s *Scraper) CheckFiz() bool {
 		fmt.Println(num, s.lastFiz)
 		s.difFiz = num - s.lastFiz
 		s.lastFiz = num
+		s.cfg.Lasts.LastFiz = num
 		return true
 	}
 	return false
