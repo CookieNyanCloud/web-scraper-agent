@@ -154,7 +154,7 @@ func main() {
 
 		if update.Message.Command() == "getLast" {
 
-			msg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("%v",conf))
+			msg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("%v",conf.Lasts))
 			_, _ = bot.Send(msg)
 			continue
 		}
