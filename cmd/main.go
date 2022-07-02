@@ -15,7 +15,7 @@ import (
 func main() {
 
 	conf := configs.InitConf()
-
+	configs.SaveLasts(conf)
 	scraper := webScraper.NewScraper(conf)
 	bot, updates := sotatgbot.StartSotaBot(conf.Token)
 

@@ -83,19 +83,22 @@ func parseLasts() (*Lasts,error){
 }
 
 func SaveLasts(cfg *Conf) error{
-	err := os.Remove("lasts.json")
+	err := os.Remove("configs"+string(os.PathSeparator)+"lasts.json")
 	if err != nil {
 		return err
 	}
-	file, err := os.Create("lasts.json")
+	file, err := os.Create("configs"+string(os.PathSeparator)+"lasts.json")
 	if err != nil {
 		return err
 	}
-	bytes, err := json.Marshal(cfg)
+	bytes, err := json.Marshal(cfg.Lasts)
 	if err != nil {
 		return err
 	}
 	_, err = file.Write(bytes)
-
+	if err != nil {
+		return err
+	}
+	err = file.Close()
 	return err
 }
