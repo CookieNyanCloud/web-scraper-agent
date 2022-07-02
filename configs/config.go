@@ -73,7 +73,7 @@ func envVar(local bool) *Conf {
 }
 
 func parseLasts() (*Lasts,error){
-	file, err := os.ReadFile("lasts.json")
+	file, err := os.ReadFile("configs"+string(os.PathSeparator)+"lasts.json")
 	if err != nil {
 		return nil,err
 	}
